@@ -8,7 +8,7 @@ import {
   toDoSelector,
 } from "../atom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faListUl, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faListUl, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useForm } from "react-hook-form";
 import CreateToDo from "./CreateToDo";
 import ToDo from "./ToDo";
@@ -25,7 +25,13 @@ function ToDoList() {
   );
   const [isActive, setIsActive] = useState<boolean>(false);
   const [showNewCategory, setShowNewCategory] = useState<boolean>(false);
-  const { register, handleSubmit, reset } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    setError,
+  } = useForm();
   const onClick = (clickCate: IToDo["category"]) => {
     console.log(clickCate);
     setSelectedCategory(clickCate);
@@ -35,11 +41,19 @@ function ToDoList() {
     if (newCategory && !categoryList.includes(newCategory)) {
       setCategoryList((prev: string[]) => [newCategory, ...prev]);
       setSelectedCategory(newCategory);
+      reset();
+      setShowNewCategory(false);
     } else {
-      alert("카테고리를 다시 입력해주세요");
+      setError("newCategory", {
+        type: "manual",
+        message: "카테고리를 다시 입력해주세요",
+      });
     }
-    reset();
-    setShowNewCategory(false);
+  };
+  const handleDelete = (cate: string) => {
+    setCategoryList((prev: string[]) =>
+      prev.filter((category) => category !== cate)
+    );
   };
 
   return (
@@ -47,28 +61,41 @@ function ToDoList() {
       <Title>To Do List</Title>
       <ButtonContainer>
         {categoryList.map((cate: string) => (
-          <Button
-            isActive={selectedCategory === cate}
-            onClick={() => {
-              onClick(cate);
-              setShowNewCategory(cate === "NEW" ? true : false);
-            }}
-          >
-            {cate === "NEW" ? <FontAwesomeIcon icon={faListUl} /> : cate}
-          </Button>
+          <CategoryButton>
+            <Button
+              isActive={selectedCategory === cate}
+              onClick={() => {
+                onClick(cate);
+                setShowNewCategory(cate === "NEW" ? true : false);
+              }}
+            >
+              {cate === "NEW" ? <FontAwesomeIcon icon={faListUl} /> : cate}
+            </Button>
+            {!["TO_DO", "DOING", "DONE", "NEW"].includes(cate) && (
+              <DeleteButton onClick={() => handleDelete(cate)}>
+                <FontAwesomeIcon icon={faXmark} />
+              </DeleteButton>
+            )}
+          </CategoryButton>
         ))}
       </ButtonContainer>
-      <form onSubmit={handleSubmit(onValid)}>
-        <NewCategory show={showNewCategory}>
+      <NewCategoryForm show={showNewCategory} onSubmit={handleSubmit(onValid)}>
+        <NewCategory>
           <input
-            {...register("newCategory", { required: true })}
+            {...register("newCategory", {
+              required: "true",
+              maxLength: { value: 7, message: "7자리 이하로만 입력 가능해요" },
+            })}
             placeholder="새로운 카테고리를 추가해보세요"
           ></input>
           <button>
             <FontAwesomeIcon icon={faPlus} />
           </button>
         </NewCategory>
-      </form>
+        <Span>
+          {errors?.newCategory?.message && String(errors?.newCategory?.message)}
+        </Span>
+      </NewCategoryForm>
       <CreateToDo />
       {toDos.map((toDo) => (
         <ToDo key={toDo.id} {...toDo} />
@@ -120,8 +147,28 @@ const Button = styled.button<{ isActive: boolean }>`
   `}
 `;
 
-const NewCategory = styled.div<{ show: boolean }>`
-  display: ${(props) => (props.show ? "flex" : "none")};
+const CategoryButton = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const DeleteButton = styled.button`
+  position: absolute;
+  top: -20%;
+  right: -8%;
+  padding: 2px 5px;
+  background: #b2bec3;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+`;
+
+const NewCategoryForm = styled.form<{ show: boolean }>`
+  display: ${(props) => (props.show ? "block" : "none")};
+`;
+
+const NewCategory = styled.div`
+  display: flex;
   gap: 10px;
 
   input {
@@ -130,7 +177,6 @@ const NewCategory = styled.div<{ show: boolean }>`
     border: none;
     border-radius: 10px;
     padding-left: 10px;
-    margin-bottom: 20px;
 
     &:focus {
       outline: none;
@@ -147,6 +193,11 @@ const NewCategory = styled.div<{ show: boolean }>`
     font-weight: 600;
     cursor: pointer;
   }
+`;
+
+const Span = styled.span`
+  color: #ff4848;
+  font-size: 12px;
 `;
 
 export default ToDoList;

@@ -1,11 +1,12 @@
 import styled from "styled-components";
-import { useSetRecoilState } from "recoil";
-import { IToDo, toDoState } from "../atom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { IToDo, catagoryListState, toDoState } from "../atom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 function ToDo({ text, category, id }: IToDo) {
   const setToDos = useSetRecoilState(toDoState);
+  const categoryList = useRecoilValue(catagoryListState);
   const onClick = (newCate: IToDo["category"]) => {
     setToDos((oldToDos) =>
       oldToDos.map((toDo) => {
@@ -24,15 +25,14 @@ function ToDo({ text, category, id }: IToDo) {
     <Li>
       <span>{text}</span>
       <ButtonContainer>
-        {category !== "TO_DO" && (
-          <Button onClick={() => onClick("TO_DO")}>To Do</Button>
-        )}
-        {category !== "DOING" && (
-          <Button onClick={() => onClick("DOING")}>Doing</Button>
-        )}
-        {category !== "DONE" && (
-          <Button onClick={() => onClick("DONE")}>Done</Button>
-        )}
+        {categoryList
+          .filter((cate: string) => cate !== "NEW")
+          .map(
+            (cate: string) =>
+              category !== cate && (
+                <Button onClick={() => onClick(cate)}>{cate}</Button>
+              )
+          )}
         <Button onClick={() => handleDelete(id)}>
           <FontAwesomeIcon icon={faTrash} />
         </Button>
@@ -46,7 +46,8 @@ const Li = styled.li`
   align-items: center;
   flex-direction: column;
   width: 100%;
-  height: 80px;
+  height: auto;
+  min-height: 80px;
   border-radius: 10px;
   padding: 10px;
   margin-bottom: 10px;
@@ -61,12 +62,15 @@ const Li = styled.li`
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   width: 100%;
   gap: 10px;
 `;
 
 const Button = styled.button`
-  width: 70px;
+  width: auto;
+  min-width: 70px;
+  max-width: 108px;
   height: 30px;
   color: #a29bfe;
   background-color: white;
