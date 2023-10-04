@@ -24,6 +24,7 @@
     "react-router-dom": "^6.16.0",
     "react-scripts": "5.0.1",
     "recoil": "^0.7.7",
+    "recoil-persist": "^5.1.0",
     "styled-components": "^6.0.8",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
@@ -59,5 +60,5 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/styled-components": "^5.1.28"
   },
-  "homepage": "https://gyurison7.github.io/crypto-tracker-clone"
+  "homepage": "https://gyurison7.github.io/to-do-list"
 }
